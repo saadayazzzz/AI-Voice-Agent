@@ -1,13 +1,3 @@
-/**
- * Dashboard client for the voice agent.
- *
- * Audio path (both directions are raw PCM16 @ 24kHz, base64 over one socket —
- * the same format the backend negotiates with OpenAI, so nothing transcodes):
- *
- *   mic -> AudioWorklet -> Float32 -> PCM16 -> base64 -> ws
- *   ws  -> base64 -> PCM16 -> Float32 -> scheduled AudioBuffers -> speakers
- */
-
 const SAMPLE_RATE = 24000;
 const BAR_COUNT = 28;
 
@@ -36,21 +26,18 @@ const els = {
   barsAgent: document.getElementById('bars-agent'),
 };
 
-/** Live session state. Everything here is torn down by stopSession(). */
 let ws = null;
 let micStream = null;
 let micCtx = null;
 let playCtx = null;
 let micAnalyser = null;
 let agentAnalyser = null;
-let playCursor = 0;          // next start time on the playback clock
-let scheduledSources = [];   // so barge-in can stop queued audio
+let playCursor = 0;
+let scheduledSources = [];
 let timerHandle = null;
 let vizHandle = null;
 let startedAt = 0;
 let active = false;
-
-/* ------------------------------------------------------------------ audio */
 
 function floatToPCM16Base64(float32) {
   const pcm = new DataView(new ArrayBuffer(float32.length * 2));
@@ -63,7 +50,7 @@ function floatToPCM16Base64(float32) {
 
 function bytesToBase64(bytes) {
   let binary = '';
-  const CHUNK = 0x8000; // avoid blowing the argument limit on large buffers
+  const CHUNK = 0x8000;
   for (let i = 0; i < bytes.length; i += CHUNK) {
     binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
   }
@@ -81,7 +68,6 @@ function base64ToFloat32(b64) {
   return float32;
 }
 
-/** Queue an agent audio chunk so chunks play gapless, back to back. */
 function playChunk(b64) {
   const float32 = base64ToFloat32(b64);
   if (!float32.length) return;
@@ -93,7 +79,6 @@ function playChunk(b64) {
   source.buffer = buffer;
   source.connect(agentAnalyser);
 
-  // A small lead-in absorbs network jitter without an audible delay.
   const now = playCtx.currentTime;
   if (playCursor < now) playCursor = now + 0.04;
 
@@ -106,16 +91,13 @@ function playChunk(b64) {
   };
 }
 
-/** Barge-in: drop everything still queued so the agent stops mid-sentence. */
 function stopPlayback() {
   scheduledSources.forEach((s) => {
-    try { s.stop(); } catch { /* already finished */ }
+    try { s.stop(); } catch {  }
   });
   scheduledSources = [];
   playCursor = 0;
 }
-
-/* ------------------------------------------------------------- visualizer */
 
 function buildBars(container) {
   container.innerHTML = '';
@@ -154,8 +136,6 @@ function resetBars() {
   });
 }
 
-/* --------------------------------------------------------------- session */
-
 function setStatus(state, text) {
   els.connPill.dataset.state = state;
   els.connText.textContent = text;
@@ -189,7 +169,7 @@ async function startSession() {
 
   micCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
   playCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
-  // Browsers start contexts suspended until a user gesture; the click qualifies.
+
   await Promise.all([micCtx.resume(), playCtx.resume()]);
 
   agentAnalyser = playCtx.createAnalyser();
@@ -214,8 +194,6 @@ async function startSession() {
         }
       };
 
-      // The worklet has no audible output, but the graph only pulls frames if
-      // it reaches a destination — route it through a muted gain node.
       const mute = micCtx.createGain();
       mute.gain.value = 0;
       source.connect(micAnalyser);
@@ -253,29 +231,20 @@ async function startSession() {
   };
 
   ws.onerror = () => {
-    // Fires before onclose, so this state survives the teardown that follows.
+
     showToast('Connection failed. Is the server running and OPENAI_API_KEY set?', 'error');
     setStatus('error', 'Error');
   };
 
-  // Always tear down, even if the socket died before it ever opened — otherwise
-  // the mic stays hot and the orb is stuck in its non-interactive state.
   ws.onclose = () => stopSession({ keepStatus: !active });
 }
 
-/**
- * Tear down every resource a session holds. Safe to call from any state —
- * including a session that never finished connecting.
- *
- * `keepStatus` preserves an error already shown in the status pill, so a
- * failed connection doesn't get overwritten with a reassuring "Idle".
- */
 function stopSession({ keepStatus = false } = {}) {
   active = false;
 
   if (ws) {
     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ event: 'stop' }));
-    ws.onclose = null; // don't re-enter through the close handler
+    ws.onclose = null;
     ws.close();
     ws = null;
   }
@@ -310,8 +279,6 @@ function updateTimer() {
   els.timer.textContent = `${mm}:${ss}`;
 }
 
-/* ------------------------------------------------------------ transcript */
-
 function appendTurn(role, text) {
   els.transcriptEmpty.hidden = true;
 
@@ -340,8 +307,6 @@ function handleToolEvent(msg) {
   }
 }
 
-/* ------------------------------------------------------------------ data */
-
 async function loadCalls() {
   try {
     const calls = await fetch('/calls?limit=10').then((r) => r.json());
@@ -358,7 +323,7 @@ async function loadCalls() {
         <td>${formatTime(call.started_at)}</td>
       </tr>`).join('');
   } catch {
-    /* leave the previous rows in place if a refresh fails */
+
   }
 }
 
@@ -378,7 +343,7 @@ async function loadLeads() {
         <div class="lead-meta">${escapeHtml(lead.reason || '')}</div>
       </li>`).join('');
   } catch {
-    /* non-fatal */
+
   }
 }
 
@@ -408,7 +373,7 @@ async function loadInfo() {
 }
 
 function formatTime(iso) {
-  // Timestamps are UTC; the Z suffix keeps browsers from reading them as local.
+
   const date = new Date(/[Z+]/.test(iso) ? iso : `${iso}Z`);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -418,8 +383,6 @@ function escapeHtml(value) {
   div.textContent = String(value);
   return div.innerHTML;
 }
-
-/* -------------------------------------------------------------- wire-up */
 
 els.micBtn.addEventListener('click', () => (active ? stopSession() : startSession()));
 
@@ -450,7 +413,6 @@ els.outboundForm.addEventListener('submit', async (event) => {
   }
 });
 
-// Closing the tab mid-session should hang up rather than leak an open socket.
 window.addEventListener('beforeunload', () => { if (active) stopSession(); });
 
 buildBars(els.barsUser);

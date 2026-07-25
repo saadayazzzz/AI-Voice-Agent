@@ -13,7 +13,6 @@ class TwilioNotConfigured(RuntimeError):
 
 @lru_cache
 def _client() -> Client:
-    # Built lazily so the app boots with only an OpenAI key (browser-only mode).
     if not settings.twilio_configured:
         raise TwilioNotConfigured(
             "Twilio credentials are not set. Add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN "

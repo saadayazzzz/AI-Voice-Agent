@@ -17,8 +17,6 @@ logger = logging.getLogger("voice_agent.main")
 
 STATIC_DIR = Path(__file__).parent / "static"
 
-# Idempotent (CREATE TABLE IF NOT EXISTS under the hood) — run at import time
-# so the schema exists even under test clients that skip lifespan events.
 init_db()
 
 

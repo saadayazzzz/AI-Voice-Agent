@@ -43,8 +43,6 @@ OPENAI_REALTIME_URL = "wss://api.openai.com/v1/realtime"
 class BaseRealtimeBridge:
     """Owns the OpenAI side of the conversation; subclasses own the client side."""
 
-    # Audio format negotiated with OpenAI for this transport, as a GA format
-    # object (e.g. {"type": "audio/pcm", "rate": 24000}).
     audio_format: dict = {"type": "audio/pcm", "rate": 24000}
 
     def __init__(self, db: Session, call: Call):
@@ -53,12 +51,8 @@ class BaseRealtimeBridge:
         self.openai_ws: websockets.WebSocketClientProtocol | None = None
         self._assistant_transcript = ""
 
-        # Barge-in bookkeeping: how far into the current reply we got before
-        # the caller interrupted, so OpenAI's context matches what was heard.
         self.last_assistant_item: str | None = None
         self.response_started_at: float | None = None
-
-    # ---- lifecycle -------------------------------------------------------
 
     async def run(self) -> None:
         url = f"{OPENAI_REALTIME_URL}?model={settings.openai_realtime_model}"
@@ -78,8 +72,6 @@ class BaseRealtimeBridge:
             "session": {
                 "type": "realtime",
                 "instructions": settings.agent_system_prompt,
-                # Audio output always carries a text transcript, so asking for
-                # both modalities is rejected — "audio" alone gives us each.
                 "output_modalities": ["audio"],
                 "audio": {
                     "input": {
@@ -109,8 +101,6 @@ class BaseRealtimeBridge:
             "type": "input_audio_buffer.append",
             "audio": b64_audio,
         }))
-
-    # ---- OpenAI -> client ------------------------------------------------
 
     async def _openai_to_client(self) -> None:
         try:
@@ -194,8 +184,6 @@ class BaseRealtimeBridge:
         self.db.add(Transcript(call_id=self.call.id, role=role, content=content))
         self.db.commit()
 
-    # ---- transport hooks (subclasses implement) --------------------------
-
     async def _client_to_openai(self) -> None:
         raise NotImplementedError
 
@@ -222,8 +210,6 @@ class TwilioBridge(BaseRealtimeBridge):
         self.twilio_ws = twilio_ws
         self.stream_sid: str | None = None
 
-        # Twilio reports playback progress via marks; tracking them tells us
-        # whether audio is still playing when the caller starts talking.
         self.latest_media_timestamp = 0
         self.response_start_timestamp: int | None = None
         self.mark_queue: list[str] = []
@@ -307,8 +293,6 @@ class BrowserBridge(BaseRealtimeBridge):
     async def handle_interruption(self) -> None:
         if self.response_started_at is None:
             return
-        # Browser plays chunks back-to-back in real time, so wall-clock elapsed
-        # since the first chunk is a good proxy for how much was actually heard.
         played_ms = int((time.monotonic() - self.response_started_at) * 1000)
         await self._truncate_assistant_audio(played_ms)
         await self._safe_send({"event": "clear"})

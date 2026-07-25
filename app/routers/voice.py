@@ -77,7 +77,6 @@ async def media_stream(websocket: WebSocket) -> None:
     call: Call | None = None
     try:
         stream_sid: str | None = None
-        # Twilio sends "connected" then "start" before any "media" frames.
         while True:
             raw = await websocket.receive_text()
             data = json.loads(raw)

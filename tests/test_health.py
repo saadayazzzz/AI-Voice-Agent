@@ -16,7 +16,6 @@ def test_info_reports_feature_flags():
     assert resp.status_code == 200
     body = resp.json()
     assert body["service"] == "voice-ai-agent"
-    # conftest supplies a dummy OpenAI key but no Twilio credentials.
     assert body["openai_configured"] is True
     assert body["twilio_configured"] is False
 

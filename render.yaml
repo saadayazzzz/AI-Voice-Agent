@@ -1,13 +1,3 @@
-# Render Blueprint — free tier, no credit card required.
-#
-# Deploy: push this repo to GitHub, then on render.com choose
-# "New +" -> "Blueprint" and point it at the repo. Render reads this file,
-# builds the Dockerfile, and prompts for the secrets marked `sync: false`.
-#
-# Note on the free plan: the service sleeps after ~15 minutes of inactivity
-# and takes roughly a minute to wake on the next request. Fine for a demo —
-# just open the URL once and wait for it before starting a voice session.
-
 services:
   - type: web
     name: voice-ai-agent
@@ -15,7 +5,6 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      # Prompted in the Render dashboard, never stored in the repo.
       - key: OPENAI_API_KEY
         sync: false
 
@@ -39,8 +28,5 @@ services:
       - key: LOG_LEVEL
         value: INFO
 
-      # SQLite on the free plan lives on an ephemeral disk: calls and
-      # transcripts reset on every redeploy. Swap in a managed Postgres URL
-      # here if the data needs to survive — no code changes required.
       - key: DATABASE_URL
-        value: sqlite:///./voice_agent.db
+        value: sqlite:////tmp/voice_agent.db

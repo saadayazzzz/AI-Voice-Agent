@@ -56,7 +56,6 @@ code {
   border-radius: 5px;
 }
 
-/* ---------- top bar ---------- */
 .topbar {
   display: flex;
   align-items: center;
@@ -103,7 +102,6 @@ code {
 .status-pill[data-state="error"] { color: var(--danger); }
 @keyframes blink { 50% { opacity: .3; } }
 
-/* ---------- layout ---------- */
 .layout {
   max-width: 1240px;
   margin: 0 auto;
@@ -159,7 +157,6 @@ code {
   font-size: 12px; font-weight: 620;
 }
 
-/* ---------- call card ---------- */
 .call-card { display: flex; flex-direction: column; }
 .timer {
   font-variant-numeric: tabular-nums;
@@ -174,8 +171,7 @@ code {
   min-height: 210px;
 }
 .orb-rings { position: absolute; inset: 0; pointer-events: none; }
-/* Pinned to the wrap's centre with an explicit half-size offset so the rings
-   share the orb's centre exactly, rather than relying on abspos grid alignment. */
+
 .orb-rings span {
   position: absolute;
   top: 50%; left: 50%;
@@ -249,7 +245,6 @@ body.session-connecting .orb { filter: saturate(.6); pointer-events: none; }
 .toast[data-kind="error"] { background: transparent; border-color: var(--danger); color: var(--danger); }
 .toast[data-kind="tool"] { background: var(--agent-soft); color: var(--agent); }
 
-/* ---------- transcript ---------- */
 .transcript-card { display: flex; flex-direction: column; }
 .transcript {
   flex: 1;
@@ -289,7 +284,6 @@ body.session-connecting .orb { filter: saturate(.6); pointer-events: none; }
 }
 .empty-icon { font-size: 26px; margin-bottom: 8px; opacity: .75; }
 
-/* ---------- tables & leads ---------- */
 .scroll-x { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; white-space: nowrap; }
 .data-table th {
@@ -318,7 +312,6 @@ body.session-connecting .orb { filter: saturate(.6); pointer-events: none; }
 .leads .lead-name { font-weight: 600; }
 .leads .lead-meta { color: var(--text-dim); font-size: 12.5px; margin-top: 3px; }
 
-/* ---------- phone card ---------- */
 .inline-form { display: flex; gap: 9px; flex-wrap: wrap; }
 .inline-form input {
   flex: 1; min-width: 170px;

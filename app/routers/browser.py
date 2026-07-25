@@ -39,7 +39,6 @@ async def browser_session(websocket: WebSocket) -> None:
         logger.info("Browser session disconnected (call %s)", call.id)
     except Exception as exc:
         logger.exception("Browser session failed (call %s)", call.id)
-        # Surface the failure in the UI instead of a silent dead microphone.
         try:
             await websocket.send_json({"event": "error", "message": str(exc)})
         except (WebSocketDisconnect, RuntimeError):

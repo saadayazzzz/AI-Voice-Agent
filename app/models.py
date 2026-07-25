@@ -20,10 +20,10 @@ class Call(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     call_sid: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
-    direction: Mapped[str] = mapped_column(String, default="inbound")  # inbound | outbound
+    direction: Mapped[str] = mapped_column(String, default="inbound")
     from_number: Mapped[str | None] = mapped_column(String, nullable=True)
     to_number: Mapped[str | None] = mapped_column(String, nullable=True)
-    status: Mapped[str] = mapped_column(String, default="in-progress")  # in-progress | completed | failed
+    status: Mapped[str] = mapped_column(String, default="in-progress")
     started_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=utcnow)
     ended_at: Mapped[datetime.datetime | None] = mapped_column(DateTime, nullable=True)
 
@@ -38,7 +38,7 @@ class Transcript(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     call_id: Mapped[str] = mapped_column(String, ForeignKey("calls.id"))
-    role: Mapped[str] = mapped_column(String)  # user | assistant
+    role: Mapped[str] = mapped_column(String)
     content: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime, default=utcnow)
 
