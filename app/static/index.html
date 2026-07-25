@@ -107,17 +107,18 @@
     <section class="card phone-card" id="phone-card">
       <div class="card-head"><h2>Phone call</h2></div>
       <div id="phone-enabled" hidden>
-        <p class="muted">Have the agent call a number via Twilio.</p>
+        <p class="muted" id="phone-provider-note">Have the agent call a phone number.</p>
         <form class="inline-form" id="outbound-form">
-          <input type="tel" id="outbound-number" placeholder="+1 555 123 4567" required />
-          <button type="submit" class="primary-btn">Call</button>
+          <input type="tel" id="outbound-number" placeholder="+92 300 1234567" required />
+          <button type="submit" class="primary-btn">Call me</button>
         </form>
       </div>
       <div id="phone-disabled">
         <p class="muted">
-          Twilio isn't configured, so phone calls are off — the browser session above
-          exercises the same agent. Add <code>TWILIO_ACCOUNT_SID</code>,
-          <code>TWILIO_AUTH_TOKEN</code> and <code>TWILIO_PHONE_NUMBER</code> to
+          No phone provider is configured, so outbound calls are off — the browser
+          session above exercises the same agent. Add Vapi credentials
+          (<code>VAPI_API_KEY</code>, <code>VAPI_ASSISTANT_ID</code>,
+          <code>VAPI_PHONE_NUMBER_ID</code>) or Twilio credentials to
           <code>.env</code> to enable them.
         </p>
       </div>

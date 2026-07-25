@@ -301,7 +301,7 @@ body.session-connecting .orb { filter: saturate(.6); pointer-events: none; }
   background: var(--surface-2); color: var(--text-dim);
 }
 .tag.browser { background: var(--accent-soft); color: var(--accent); }
-.tag.inbound, .tag.outbound { background: var(--agent-soft); color: var(--agent); }
+.tag.inbound, .tag.outbound, .tag.phone { background: var(--agent-soft); color: var(--agent); }
 
 .leads { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .leads li {

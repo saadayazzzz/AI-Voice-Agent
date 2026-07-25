@@ -1,0 +1,58 @@
+{
+  "name": "Acme Co Receptionist",
+  "firstMessage": "Hi! Thanks for calling Acme Co. How can I help you today?",
+  "model": {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "temperature": 0.7,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a friendly, concise voice assistant for a business called Acme Co. Greet the caller, understand why they are calling, answer questions helpfully, and if they want to leave contact details use the save_lead tool. Keep responses short and conversational since this is a spoken phone conversation."
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "async": false,
+        "server": {
+          "url": "REPLACE_WITH_YOUR_PUBLIC_URL/vapi/webhook"
+        },
+        "function": {
+          "name": "save_lead",
+          "description": "Save the caller's contact details and reason for calling. Use this whenever the caller shares their name, phone number, or the reason they're calling, so a human can follow up later.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Caller's full name"
+              },
+              "phone": {
+                "type": "string",
+                "description": "Caller's callback phone number"
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why the caller is reaching out"
+              }
+            },
+            "required": ["reason"]
+          }
+        }
+      }
+    ]
+  },
+  "voice": {
+    "provider": "openai",
+    "voiceId": "alloy"
+  },
+  "transcriber": {
+    "provider": "deepgram",
+    "model": "nova-2"
+  },
+  "server": {
+    "url": "REPLACE_WITH_YOUR_PUBLIC_URL/vapi/webhook"
+  },
+  "serverMessages": ["tool-calls", "end-of-call-report", "status-update"]
+}

@@ -22,6 +22,7 @@ const els = {
   phoneDisabled: document.getElementById('phone-disabled'),
   outboundForm: document.getElementById('outbound-form'),
   outboundNumber: document.getElementById('outbound-number'),
+  phoneProviderNote: document.getElementById('phone-provider-note'),
   barsUser: document.getElementById('bars-user'),
   barsAgent: document.getElementById('bars-agent'),
 };
@@ -38,6 +39,7 @@ let timerHandle = null;
 let vizHandle = null;
 let startedAt = 0;
 let active = false;
+let phoneProvider = null;
 
 function floatToPCM16Base64(float32) {
   const pcm = new DataView(new ArrayBuffer(float32.length * 2));
@@ -359,9 +361,15 @@ async function loadInfo() {
       els.hint.textContent = 'Add your OpenAI API key to .env to start talking';
     }
 
-    if (info.twilio_configured) {
+    // Prefer Vapi when both are available: it supplies the number and the
+    // speech stack, so it works without our own telephony credentials.
+    phoneProvider = info.vapi_configured ? 'vapi' : (info.twilio_configured ? 'twilio' : null);
+
+    if (phoneProvider) {
       els.phoneEnabled.hidden = false;
       els.phoneDisabled.hidden = true;
+      els.phoneProviderNote.textContent =
+        `Have the agent call a phone number via ${phoneProvider === 'vapi' ? 'Vapi' : 'Twilio'}.`;
       if (info.phone_number) {
         els.phonePill.textContent = info.phone_number;
         els.phonePill.hidden = false;
@@ -398,7 +406,8 @@ els.outboundForm.addEventListener('submit', async (event) => {
   const button = els.outboundForm.querySelector('button');
   button.disabled = true;
   try {
-    const res = await fetch('/calls/outbound', {
+    const endpoint = phoneProvider === 'vapi' ? '/calls/vapi-outbound' : '/calls/outbound';
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to_number: els.outboundNumber.value }),

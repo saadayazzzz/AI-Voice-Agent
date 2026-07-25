@@ -16,9 +16,17 @@ speech-to-text, the LLM turn, and text-to-speech happen inside one duplex WebSoc
 Calls, transcripts, and captured leads are persisted and shown live on a dashboard.
 
 **To try it:** open the deployed URL, click the mic, and start talking — no phone
-number or signup needed. The browser path is the verified one; the Twilio phone
-path is [implemented but untested](#adding-phone-calls-twilio--optional-untested)
-since it requires a paid number.
+number or signup needed.
+
+Phone calls are supported two ways: [via Vapi](#adding-phone-calls-via-vapi-recommended),
+which supplies the number and speech stack while `save_lead` and call history stay
+in this backend, or [via Twilio](#adding-phone-calls-twilio--optional-untested) using
+the self-hosted audio bridge.
+
+**Verification status:** the browser path and the Vapi path have both been exercised
+against live conversations — real speech in, real audio out, transcripts persisted.
+The Twilio bridge is implemented and unit-tested but has never been run against a
+live call, since it needs a paid number.
 
 ## Architecture
 
@@ -82,6 +90,40 @@ The agent greets you, responds in real time, and you can interrupt it mid-senten
 | **Captured leads** | Rows the agent saved by calling the `save_lead` tool |
 | **Phone call** | Dial out via Twilio (hidden until Twilio credentials are set) |
 
+## Adding phone calls via Vapi (recommended)
+
+Vapi runs the telephony and speech stack on their side and provides a phone
+number on the free tier, so this path needs no audio bridge of our own — the
+agent's *behaviour* still lives here: `save_lead` runs against this database,
+and calls appear on the same dashboard as browser sessions.
+
+1. Sign up at [vapi.ai](https://vapi.ai) and get a phone number from
+   **Phone Numbers → Buy Number** (free-tier credit covers it).
+2. Create an assistant. `vapi-assistant.json` in this repo is a ready
+   configuration — paste it in and replace both occurrences of
+   `REPLACE_WITH_YOUR_PUBLIC_URL` with your public URL, e.g.
+   `https://your-app.example.com/vapi/webhook`.
+3. Optionally set a server secret in Vapi and put the same value in `.env` as
+   `VAPI_SECRET`; the webhook rejects mismatched requests with a 401.
+4. Assign the assistant to your number and call it.
+
+The webhook handles `tool-calls` (dispatched through the same `TOOL_HANDLERS`
+registry the browser agent uses), `end-of-call-report` (writes the finished
+transcript), and `status-update` (call lifecycle). Transcript writes are
+idempotent, since Vapi retries webhooks it considers failed.
+
+Two things worth knowing, both learned from live calls rather than the docs:
+
+- In `artifact.messages` Vapi labels the agent's turns **`bot`**, not
+  `assistant` as documented, and prepends a `system` entry holding the prompt.
+  `_ROLE_MAP` in `routers/vapi.py` normalises both spellings and drops the
+  system entry.
+- **Outbound calling needs a purchased phone number.** A free-tier SIP endpoint
+  cannot originate PSTN calls; attempts end immediately with
+  `call.start.error-get-transport` at zero cost. Inbound (SIP, or the
+  dashboard's *Talk to Assistant*) works fine, and `POST /calls/vapi-outbound`
+  is ready for when a real number is attached.
+
 ## Adding phone calls (Twilio) — optional, untested
 
 > **Status:** the Twilio path is code-complete but has **not been run against a
@@ -125,6 +167,7 @@ curl -X POST http://localhost:8000/calls/outbound \
 | `GET` | `/health` | Liveness probe |
 | `GET` | `/api/info` | Model, voice, and which integrations are configured |
 | `WS` | `/browser/session` | Browser mic session (PCM16 @ 24kHz) |
+| `POST` | `/vapi/webhook` | Vapi phone events: tool calls, end-of-call report, status |
 | `POST` | `/voice/incoming-call` | Twilio webhook → returns TwiML opening a media stream |
 | `WS` | `/voice/media-stream` | Twilio Media Streams audio (G.711 u-law @ 8kHz) |
 | `POST` | `/voice/status-callback` | Twilio call-completion webhook |

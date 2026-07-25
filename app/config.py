@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     twilio_auth_token: str | None = None
     twilio_phone_number: str | None = None
 
+    vapi_secret: str | None = None
+    vapi_phone_number: str | None = None
+    vapi_api_key: str | None = None
+    vapi_assistant_id: str | None = None
+    vapi_phone_number_id: str | None = None
+
     public_base_url: str = "http://localhost:8000"
 
     agent_system_prompt: str = "You are a helpful, concise voice assistant."
@@ -31,6 +37,10 @@ class Settings(BaseSettings):
     @property
     def twilio_configured(self) -> bool:
         return all([self.twilio_account_sid, self.twilio_auth_token, self.twilio_phone_number])
+
+    @property
+    def vapi_outbound_configured(self) -> bool:
+        return all([self.vapi_api_key, self.vapi_assistant_id, self.vapi_phone_number_id])
 
     @property
     def public_ws_url(self) -> str:
