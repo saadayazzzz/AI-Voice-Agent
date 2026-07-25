@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voice AI Agent</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <h1>Voice AI Agent</h1>
+        <p class="brand-sub" id="model-label">OpenAI Realtime</p>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <span class="pill" id="phone-pill" hidden></span>
+      <span class="pill status-pill" id="conn-pill">
+        <span class="dot" id="conn-dot"></span>
+        <span id="conn-text">Idle</span>
+      </span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Call control -->
+    <section class="card call-card">
+      <div class="card-head">
+        <h2>Live session</h2>
+        <span class="timer" id="timer">00:00</span>
+      </div>
+
+      <div class="orb-wrap">
+        <div class="orb-rings" id="orb-rings" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <button class="orb" id="mic-btn" aria-label="Start talking to the agent">
+          <svg class="icon-mic" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-5a3.5 3.5 0 1 0-7 0v5A3.5 3.5 0 0 0 12 15Z"/>
+            <path d="M18.5 11.5a6.5 6.5 0 0 1-13 0M12 18v3.5"/>
+          </svg>
+          <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="7" y="7" width="10" height="10" rx="2.5"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="orb-hint" id="orb-hint">Click the mic and just start talking</p>
+
+      <div class="meters">
+        <div class="meter">
+          <span class="meter-label">You</span>
+          <div class="bars" id="bars-user" aria-hidden="true"></div>
+        </div>
+        <div class="meter">
+          <span class="meter-label">Agent</span>
+          <div class="bars agent" id="bars-agent" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast" hidden></div>
+    </section>
+
+    <!-- Transcript -->
+    <section class="card transcript-card">
+      <div class="card-head">
+        <h2>Transcript</h2>
+        <button class="ghost-btn" id="clear-transcript">Clear</button>
+      </div>
+      <div class="transcript" id="transcript">
+        <div class="empty" id="transcript-empty">
+          <div class="empty-icon">💬</div>
+          <p>Start a session and the conversation will appear here in real time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Recent calls</h2>
+        <button class="ghost-btn" id="refresh-calls">Refresh</button>
+      </div>
+      <div class="scroll-x">
+        <table class="data-table" id="calls-table">
+          <thead>
+            <tr><th>Source</th><th>From</th><th>Status</th><th>Turns</th><th>Started</th></tr>
+          </thead>
+          <tbody id="calls-body">
+            <tr class="empty-row"><td colspan="5">No calls yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Leads -->
+    <section class="card">
+      <div class="card-head">
+        <h2>Captured leads</h2>
+        <span class="badge" id="leads-count">0</span>
+      </div>
+      <ul class="leads" id="leads-list">
+        <li class="empty-row">The agent saves a lead here when a caller shares their details.</li>
+      </ul>
+    </section>
+
+    <!-- Phone -->
+    <section class="card phone-card" id="phone-card">
+      <div class="card-head"><h2>Phone call</h2></div>
+      <div id="phone-enabled" hidden>
+        <p class="muted">Have the agent call a number via Twilio.</p>
+        <form class="inline-form" id="outbound-form">
+          <input type="tel" id="outbound-number" placeholder="+1 555 123 4567" required />
+          <button type="submit" class="primary-btn">Call</button>
+        </form>
+      </div>
+      <div id="phone-disabled">
+        <p class="muted">
+          Twilio isn't configured, so phone calls are off — the browser session above
+          exercises the same agent. Add <code>TWILIO_ACCOUNT_SID</code>,
+          <code>TWILIO_AUTH_TOKEN</code> and <code>TWILIO_PHONE_NUMBER</code> to
+          <code>.env</code> to enable them.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

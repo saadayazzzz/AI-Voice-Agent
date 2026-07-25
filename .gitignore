@@ -1,0 +1,24 @@
+# --- secrets: never commit these ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# --- local data / logs ---
+*.db
+*.db-journal
+*.log
+
+# --- editors / os ---
+.DS_Store
+.idea/
+.vscode/
