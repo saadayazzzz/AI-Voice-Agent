@@ -1,3 +1,13 @@
+---
+title: Voice AI Agent
+emoji: 🎙️
+colorFrom: indigo
+colorTo: green
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # Voice AI Agent
 
 A real-time voice AI agent you can talk to **from the browser** or **over the phone**.
@@ -162,30 +172,41 @@ Dockerfile
 ## Deploying (free, no credit card)
 
 The app needs a host that supports **long-lived WebSocket connections**, which
-rules out Vercel's serverless functions. `render.yaml` in this repo is a Render
-Blueprint for their free plan.
+rules out Vercel's serverless functions. Any Docker host works — the `Dockerfile`
+binds `$PORT` and runs as a non-root user.
 
-1. Push this repo to GitHub (a public repo is fine — secrets are gitignored).
-2. On [render.com](https://render.com), sign in with GitHub, then **New + → Blueprint**
-   and select the repo.
-3. Render reads `render.yaml` and prompts for `OPENAI_API_KEY`. Paste it there —
-   it is stored by Render, never committed.
-4. Wait for the first build, then open the assigned
-   `https://<your-app>.onrender.com` URL and click the mic.
+### Hugging Face Spaces (recommended — free, stays up)
 
-HTTPS comes free with the domain, which browsers require before granting
-microphone access — so the deployed app works where a bare `http://` host would not.
+The YAML frontmatter at the top of this README is the Space config, so no extra
+files are needed.
 
-**Free-plan caveats**, both fine for a demo but worth knowing:
+1. Create a Space at [huggingface.co/new-space](https://huggingface.co/new-space):
+   pick **Docker → Blank**, visibility **Public**.
+2. Push this repo to the Space's git remote:
+   ```bash
+   git remote add space https://huggingface.co/spaces/<user>/<space-name>
+   git push space main
+   ```
+3. In the Space's **Settings → Variables and secrets**, add a secret
+   `OPENAI_API_KEY` with your key. Never commit it.
+4. Wait for the build, then open the Space URL and click the mic.
 
-- The service **sleeps after ~15 minutes** of inactivity and takes about a minute
-  to wake. Open the URL and let it load before starting a voice session.
-- SQLite lives on an **ephemeral disk**, so calls and transcripts reset on each
-  redeploy. Point `DATABASE_URL` at a managed Postgres to persist them — no code
-  changes needed.
+### Render
 
-The `Dockerfile` is host-agnostic and binds `$PORT`, so Fly.io or any Docker host
-works too.
+`render.yaml` is a Blueprint for Render's free plan: **New + → Blueprint**, select
+the repo, and paste `OPENAI_API_KEY` when prompted. Note the free plan **sleeps
+after ~15 minutes** of inactivity and takes about a minute to wake.
+
+### Notes that apply to any host
+
+- **HTTPS is required** for microphone access. Browsers only grant mic
+  permission on secure origins (or `localhost`), so a plain `http://` host
+  will not work.
+- **SQLite is ephemeral here.** The container writes to `/tmp`, so calls and
+  transcripts reset on redeploy. Point `DATABASE_URL` at a managed Postgres to
+  persist them — no code changes required.
+- **The Realtime API bills per minute of audio** regardless of where you host.
+  `gpt-realtime-mini` is a cheaper alternative to the `gpt-realtime` default.
 
 ## Customizing the agent
 
